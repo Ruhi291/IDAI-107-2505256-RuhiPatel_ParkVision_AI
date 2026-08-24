@@ -1,87 +1,62 @@
 # ParkVision AI 🚗📷
 
-**AI-powered parking occupancy detection using computer vision and deep learning, visualized through a real-time Streamlit dashboard.**
+**Intelligent Urban Parking Analytics & Space Optimisation Platform**
 
----
+## 📌 About
 
-## 📌 Overview
+ParkVision AI is a computer vision-based system that automatically detects and analyzes parking slot occupancy from aerial or CCTV-style parking lot images. Using a MobileNetV2 deep learning model, it divides an uploaded image into a grid of individual parking slots, classifies each one as **Occupied** or **Empty**, and turns that into real-time insights — occupancy percentage, congestion level, and a clear recommendation on whether it's worth parking there.
 
-ParkVision AI is a computer vision-based system that automatically detects and monitors the occupancy status of parking slots from aerial or CCTV-style parking lot images. Instead of manually checking which spots are free, the system analyzes an image of the lot, divides it into a grid of individual parking slots, and classifies each slot as **Occupied** or **Empty** using a trained deep learning model — displaying the results instantly on an interactive dashboard.
+Beyond single-image detection, the platform tracks multiple parking lots over time, visualizes usage patterns, explains its own predictions, and simulates live video monitoring — making it closer to a real-world smart parking management tool than a one-off classifier demo.
+
+## ✨ Features
+
+### 🔍 Slot Detection
+Upload a parking lot image and specify the grid layout (rows x columns). Each slot is classified as occupied or empty with a confidence score, visualized directly on the image — 🟩 green for empty, 🟥 red for occupied.
+
+### 💡 Smart Recommendation Engine
+Beyond just showing numbers, the app generates a clear recommendation ("proceed to park" vs "try another location") based on the calculated congestion level (Low / Moderate / High).
+
+### 📊 Model Performance Dashboard
+Displays the underlying model's architecture, training parameters, and evaluation metrics — accuracy, precision, recall — along with a confusion matrix and training curves.
+
+### 🗂️ Dataset Transparency
+Shows class balance (occupied vs empty image counts) and a summary of the preprocessing pipeline used to prepare the training data, including augmentation and train/validation/test split.
+
+### 🔥 Occupancy Heatmap
+Aggregates results across repeated analyses of the same parking lot to reveal which specific slot positions tend to fill up most often.
+
+### 🕒 Multi-Lot History & Comparison
+Every analysis is logged with a timestamp and lot name, enabling occupancy trend charts over time per lot, plus a side-by-side comparison across multiple named lots.
+
+### 🎥 Video Analysis (Simulated Live Feed)
+Accepts short video clips and samples frames at regular intervals, plotting how occupancy changes over the duration of the clip — approximating a real-time camera feed.
+
+### 🔬 Explainable AI (Grad-CAM)
+For any detected slot, generates a Grad-CAM heatmap overlay showing which regions of the image most influenced the model's occupied/empty decision.
+
+### 💬 Ask ParkVision (Q&A Assistant)
+A built-in assistant that answers natural-language questions about the most recent analysis — availability, occupancy, congestion level, and parking recommendations.
+
+### 📥 Exportable Reports
+One-click export of results as an annotated image, a formatted PDF report, or a plain text summary — ready to share or attach to documentation.
 
 ## 🎯 Purpose
 
-Finding an available parking spot in busy lots — malls, offices, campuses, stadiums — is often time-consuming and inefficient, leading to traffic congestion, wasted fuel, and driver frustration. Most existing parking systems rely on manual monitoring or expensive sensor-based hardware installed under every single spot.
-
-ParkVision AI addresses this by using only camera/image input and computer vision, making occupancy detection:
-- **Low-cost** — no per-slot hardware sensors required
-- **Scalable** — works with a single overhead camera per lot
-- **Real-time** — instant occupancy status and congestion insights
-
-## ⚙️ How It Works
-
-1. **Input**: An aerial/CCTV image of the parking lot is provided to the app.
-2. **Slot Detection**: The lot is divided into a grid of individual parking slots.
-3. **Classification**: A TensorFlow-based deep learning model analyzes each slot and predicts whether it is occupied or empty, along with a confidence score.
-4. **Visualization**: Slots are color-coded on the image —
-   - 🟩 **Green** = Empty
-   - 🟥 **Red** = Occupied
-5. **Dashboard Metrics**: The app calculates and displays:
-   - Total Slots
-   - Occupied Slots
-   - Available Slots
-   - Occupancy Percentage
-   - Congestion Level (e.g. Low / Moderate / High)
-6. **Alerts**: A message is shown when the lot is filling up quickly, helping users or lot managers plan ahead.
+Finding an available parking spot in busy lots is often time-consuming, leading to congestion, wasted fuel, and driver frustration. ParkVision AI addresses this using only camera/image input rather than costly per-slot hardware sensors — making occupancy monitoring low-cost, scalable, and deployable with a single overhead camera per lot.
 
 ## 🛠️ Tech Stack
 
 | Component            | Technology         |
 |-----------------------|---------------------|
-| Model / Deep Learning | TensorFlow          |
+| Model / Deep Learning | TensorFlow (MobileNetV2) |
 | Frontend / Dashboard  | Streamlit           |
 | Image Processing      | OpenCV / NumPy      |
+| Data Handling         | Pandas              |
+| Visualization         | Matplotlib          |
+| Report Export         | fpdf2                |
 | Language              | Python              |
-
-## 📂 Project Structure
-
-```
-ParkVision_AI/
-├── app.py               # Main Streamlit application
-├── src/                 # Source code (preprocessing, model utilities, etc.)
-├── models/               # Trained model files
-├── results/              # Output images / evaluation results
-├── requirements.txt      # Python dependencies
-└── README.md             # Project documentation
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Python 3.x installed
-- pip package manager
-
-### Installation
-```bash
-git clone https://github.com/<your-username>/ParkVision_AI.git
-cd ParkVision_AI
-pip install -r requirements.txt
-```
-
-### Run the App
-```bash
-streamlit run app.py
-```
-Then open the local URL shown in the terminal (typically `http://localhost:8501`) in your browser.
-
-## 📊 Results
-
-The model successfully classifies parking slots as occupied or empty with high confidence in most cases, achieving [add your accuracy/metric here, e.g. "92% classification accuracy on the test set"]. The dashboard provides a clear, real-time snapshot of lot occupancy that could support smart parking management systems.
 
 ## ✅ Conclusion
 
-ParkVision AI demonstrates how computer vision and deep learning can be applied to solve a practical, everyday problem — parking congestion — using only camera input rather than costly hardware sensors. By automatically detecting occupancy at the slot level and presenting it through an intuitive dashboard, the system shows strong potential for real-world deployment in parking lots, malls, and smart city infrastructure, helping reduce search time, congestion, and fuel wastage.
+ParkVision AI demonstrates how computer vision and deep learning can be applied to a practical, everyday problem — parking congestion — using only camera input. By combining slot-level detection with historical tracking, explainability, and multi-lot analytics, the system shows strong potential for real-world deployment in parking lots, malls, and smart city infrastructure.
 
-
-
-
-This project is for educational/academic purposes. [Add license here if applicable, e.g. MIT License.]
