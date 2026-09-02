@@ -20,7 +20,6 @@ import os
 import sys
 import io
 import json
-import tempfile
 import datetime
 
 import streamlit as st
@@ -39,6 +38,167 @@ from insight_logic import get_insights
 # PAGE CONFIG & CONSTANTS
 # ============================================================
 st.set_page_config(page_title="ParkVision AI", page_icon="🅿️", layout="wide")
+
+# ============================================================
+# THEME STATE & CUSTOM STYLING (fonts, colors, cards, header banner)
+# ============================================================
+if "theme_mode" not in st.session_state:
+    st.session_state["theme_mode"] = "Dark"
+
+
+def get_custom_css(theme_mode):
+    if theme_mode == "Light (Blue)":
+        bg_grad = "linear-gradient(180deg, #eaf4ff 0%, #dceeff 100%)"
+        sidebar_bg = "#dceeff"
+        sidebar_border = "#b6d8f7"
+        sidebar_text = "#0f2942"
+        heading_color = "#0f2942"
+        hero_grad = "linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)"
+        hero_h1 = "#ffffff"
+        hero_p = "#eaf4ff"
+        card_bg = "#ffffff"
+        card_border = "#c7e0f8"
+        metric_label = "#3b6a91"
+        metric_value = "#1d4ed8"
+        button_grad = "linear-gradient(90deg, #3b82f6, #2563eb)"
+        button_shadow = "rgba(37,99,235,0.30)"
+        tab_color = "#5c7fa3"
+        tab_active = "#1d4ed8"
+        uploader_bg = "#ffffff"
+        uploader_border = "#93c5fd"
+        hr_color = "#c7e0f8"
+    else:
+        bg_grad = "linear-gradient(180deg, #0b1120 0%, #0f172a 100%)"
+        sidebar_bg = "#0b1120"
+        sidebar_border = "#1e293b"
+        sidebar_text = "#e2e8f0"
+        heading_color = "#f1f5f9"
+        hero_grad = "linear-gradient(135deg, #164e63 0%, #0f766e 50%, #065f46 100%)"
+        hero_h1 = "#ffffff"
+        hero_p = "#d1fae5"
+        card_bg = "#111827"
+        card_border = "#1f2937"
+        metric_label = "#94a3b8"
+        metric_value = "#34d399"
+        button_grad = "linear-gradient(90deg, #0d9488, #059669)"
+        button_shadow = "rgba(5,150,105,0.35)"
+        tab_color = "#94a3b8"
+        tab_active = "#34d399"
+        uploader_bg = "#111827"
+        uploader_border = "#334155"
+        hr_color = "#1e293b"
+
+    return f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+html, body, [class*="css"]  {{
+    font-family: 'Inter', sans-serif;
+}}
+
+.stApp {{
+    background: {bg_grad};
+}}
+
+section[data-testid="stSidebar"] {{
+    background: {sidebar_bg};
+    border-right: 1px solid {sidebar_border};
+}}
+section[data-testid="stSidebar"] * {{
+    color: {sidebar_text} !important;
+}}
+
+h1, h2, h3 {{
+    font-family: 'Poppins', sans-serif !important;
+    color: {heading_color} !important;
+}}
+
+.pv-hero {{
+    background: {hero_grad};
+    padding: 28px 32px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}}
+.pv-hero h1 {{
+    color: {hero_h1} !important;
+    font-size: 2rem;
+    margin-bottom: 4px;
+}}
+.pv-hero p {{
+    color: {hero_p};
+    font-size: 1rem;
+    margin: 0;
+}}
+
+div[data-testid="stMetric"] {{
+    background: {card_bg};
+    border: 1px solid {card_border};
+    border-radius: 12px;
+    padding: 16px 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}}
+div[data-testid="stMetricLabel"] {{
+    color: {metric_label} !important;
+}}
+div[data-testid="stMetricValue"] {{
+    color: {metric_value} !important;
+    font-family: 'Poppins', sans-serif !important;
+}}
+
+.stButton > button, .stDownloadButton > button {{
+    background: {button_grad};
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.2rem;
+    font-weight: 600;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}}
+.stButton > button:hover, .stDownloadButton > button:hover {{
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px {button_shadow};
+    color: white;
+}}
+
+button[data-baseweb="tab"] {{
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: {tab_color};
+}}
+button[data-baseweb="tab"][aria-selected="true"] {{
+    color: {tab_active} !important;
+    border-bottom: 3px solid {tab_active} !important;
+}}
+
+div[data-testid="stAlert"] {{
+    border-radius: 10px;
+}}
+
+section[data-testid="stFileUploaderDropzone"] {{
+    background: {uploader_bg};
+    border: 1px dashed {uploader_border};
+    border-radius: 12px;
+}}
+
+hr {{
+    border-color: {hr_color} !important;
+}}
+</style>
+"""
+
+
+st.markdown(get_custom_css(st.session_state["theme_mode"]), unsafe_allow_html=True)
+
+
+def render_header(title, subtitle):
+    st.markdown(f"""
+    <div class="pv-hero">
+        <h1>{title}</h1>
+        <p>{subtitle}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
 
 MODEL_PATH = "models/parkvision_model.h5"
 IMG_SIZE = (224, 224)
@@ -258,21 +418,22 @@ with st.sidebar:
 # TABS
 # ============================================================
 (tab_detect, tab_model, tab_dataset, tab_heatmap,
- tab_history, tab_video, tab_qa) = st.tabs([
+ tab_history, tab_qa, tab_settings) = st.tabs([
     "🔍 Detect", "📊 Model Performance", "🗂️ Dataset Info",
-    "🔥 Heatmap", "🕒 History", "🎥 Video Analysis", "💬 Ask ParkVision"
+    "🔥 Heatmap", "🕒 History", "💬 Ask ParkVision", "⚙️ Settings"
 ])
 
 # ------------------------------------------------------------
 # TAB 1: DETECT
 # ------------------------------------------------------------
 with tab_detect:
-    st.title("🅿️ ParkVision AI — Slot Detection")
-    st.write(
-        "Upload a parking lot photo and tell the app how many rows and columns "
-        "of parking slots are visible. It will divide the image into that grid "
-        "and classify each slot as occupied or empty."
-    )
+    st.markdown("""
+    <div class="pv-hero">
+        <h1>🅿️ ParkVision AI</h1>
+        <p>Upload a parking lot photo — we'll grid it, classify every slot,
+        and tell you whether it's worth parking here.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     lot_name = st.text_input("Lot Name", value="Lot A",
                               help="Name this parking lot to track it separately "
@@ -411,12 +572,8 @@ with tab_detect:
 # TAB 2: MODEL PERFORMANCE
 # ------------------------------------------------------------
 with tab_model:
-    st.title("📊 Model Performance")
-    st.write(
-        "Details of the trained model used for slot-level occupancy "
-        "classification, along with evaluation results on the held-out "
-        "test set."
-    )
+    render_header("📊 Model Performance",
+                   "How the underlying MobileNetV2 classifier performs on unseen data.")
 
     # --- EDIT THESE VALUES with your actual training results ---
     MODEL_NAME = "MobileNetV2 (Transfer Learning)"
@@ -467,11 +624,8 @@ with tab_model:
 # TAB 3: DATASET INFO
 # ------------------------------------------------------------
 with tab_dataset:
-    st.title("🗂️ Dataset Information")
-    st.write(
-        "Summary of the dataset used to train the occupancy classification "
-        "model, including class balance and preprocessing applied."
-    )
+    render_header("🗂️ Dataset Information",
+                   "Class balance and preprocessing behind the training data.")
 
     occupied_dir = os.path.join(DATASET_DIR, "occupied")
     empty_dir = os.path.join(DATASET_DIR, "empty")
@@ -518,11 +672,8 @@ with tab_dataset:
 # TAB 4: HEATMAP
 # ------------------------------------------------------------
 with tab_heatmap:
-    st.title("🔥 Occupancy Heatmap")
-    st.write(
-        "Shows which slot positions tend to be occupied most often, "
-        "averaged across every analysis logged for a given lot layout."
-    )
+    render_header("🔥 Occupancy Heatmap",
+                   "Which slot positions fill up most often, averaged across every logged analysis.")
 
     history_df = load_history()
 
@@ -582,7 +733,8 @@ with tab_heatmap:
 # TAB 5: HISTORY (incl. multi-lot comparison)
 # ------------------------------------------------------------
 with tab_history:
-    st.title("🕒 Session History & Lot Comparison")
+    render_header("🕒 Session History & Lot Comparison",
+                   "Every analysis you've run, and how your lots stack up against each other.")
 
     history_df = load_history()
 
@@ -621,124 +773,199 @@ with tab_history:
         )
 
 
-# ------------------------------------------------------------
-# TAB 6: VIDEO / SIMULATED LIVE-FEED ANALYSIS
-# ------------------------------------------------------------
-with tab_video:
-    st.title("🎥 Video Analysis (Simulated Live Feed)")
-    st.write(
-        "Upload a short video of a parking lot. The app extracts a frame "
-        "every few seconds and runs occupancy detection on each, so you can "
-        "see how occupancy changes over the clip — simulating a live camera feed."
-    )
-
-    video_file = st.file_uploader("Upload a video", type=["mp4", "avi", "mov"], key="video_uploader")
-
-    vcol1, vcol2 = st.columns(2)
-    with vcol1:
-        v_rows = st.number_input("Rows of slots (video)", min_value=1, max_value=20, value=3, key="v_rows")
-    with vcol2:
-        v_cols = st.number_input("Columns of slots (video)", min_value=1, max_value=20, value=6, key="v_cols")
-
-    interval_sec = st.slider("Extract a frame every N seconds", 1, 10, 3)
-
-    if video_file is not None and st.button("Analyze Video"):
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
-            tmp.write(video_file.read())
-            tmp_path = tmp.name
-
-        cap = cv2.VideoCapture(tmp_path)
-        fps = cap.get(cv2.CAP_PROP_FPS) or 25
-        frame_interval = max(int(fps * interval_sec), 1)
-
-        model = load_model()
-        trend_rows = []
-        last_annotated = None
-        frame_idx = 0
-        progress = st.progress(0)
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 1
-
-        with st.spinner("Processing video frames..."):
-            while True:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                if frame_idx % frame_interval == 0:
-                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    pil_frame = Image.fromarray(frame_rgb)
-                    annotated_rgb, insights, _, _ = analyze_image(model, pil_frame, v_rows, v_cols)
-                    last_annotated = annotated_rgb
-                    trend_rows.append({
-                        "time_sec": round(frame_idx / fps, 1),
-                        "occupancy_pct": insights["occupancy_pct"],
-                    })
-                frame_idx += 1
-                progress.progress(min(frame_idx / total_frames, 1.0))
-
-        cap.release()
-        os.remove(tmp_path)
-
-        if trend_rows:
-            st.success(f"Analyzed {len(trend_rows)} sampled frame(s) from the video.")
-
-            if last_annotated is not None:
-                st.image(last_annotated, caption="Last analyzed frame (annotated)",
-                          use_container_width=True)
-
-            trend_df = pd.DataFrame(trend_rows).set_index("time_sec")
-            st.subheader("Occupancy % Over Video Duration")
-            st.line_chart(trend_df)
-        else:
-            st.warning("No frames could be extracted from this video.")
-
-
-# ------------------------------------------------------------
 # TAB 7: Q&A ASSISTANT
 # ------------------------------------------------------------
 with tab_qa:
-    st.title("💬 Ask ParkVision")
-    st.write(
-        "Ask a question about the most recent parking analysis, e.g. "
-        "*'Is parking available?'*, *'How many spots are free?'*, "
-        "*'What's the congestion level?'*"
-    )
+    render_header("💬 Ask ParkVision",
+                   "A smarter assistant that understands availability, trends, comparisons, "
+                   "and advice — grounded in your logged history, not just the last result.")
 
     insights = st.session_state.get("latest_insights")
     lot_name_for_qa = st.session_state.get("latest_lot_name")
+    history_df_qa = load_history()
 
     if insights is None:
         st.info("Run an analysis on the Detect tab first — this assistant "
-                 "answers questions about your most recent result.")
+                 "answers questions about your results.")
     else:
-        question = st.text_input("Your question")
+        if "qa_chat" not in st.session_state:
+            st.session_state["qa_chat"] = []
 
-        def answer_question(q, insights, lot_name):
-            q_lower = q.lower()
+        def best_lot_reading(lot_name, history_df):
+            """Return the latest row for a lot from history, or None."""
+            if history_df.empty or lot_name is None:
+                return None
+            matches = history_df[history_df["lot_name"] == lot_name]
+            if matches.empty:
+                return None
+            return matches.sort_values("timestamp").iloc[-1]
 
-            if any(word in q_lower for word in ["available", "free", "empty", "space"]):
-                return (f"There are {insights['available']} available slot(s) out of "
+        def answer_question(q, insights, lot_name, history_df):
+            q_lower = q.lower().strip()
+
+            # --- Greeting ---
+            if any(w in q_lower for w in ["hi", "hello", "hey"]) and len(q_lower) < 12:
+                return (f"Hey! I'm tracking **{lot_name}** right now — "
+                        f"{insights['available']} of {insights['total']} slots free. "
+                        "Ask me about availability, trends, comparisons, or advice.")
+
+            # --- Availability ---
+            if any(w in q_lower for w in ["available", "free", "empty", "open space", "vacant"]):
+                if insights["available"] == 0:
+                    return (f"No available slots in {lot_name} right now — "
+                            "it's completely full. I'd suggest checking another lot.")
+                return (f"There are **{insights['available']}** available slot(s) out of "
                         f"{insights['total']} in {lot_name}.")
-            if any(word in q_lower for word in ["occupied", "full", "taken"]):
-                return (f"{insights['occupied']} slot(s) are currently occupied "
-                        f"in {lot_name} ({insights['occupancy_pct']}% occupancy).")
-            if "congestion" in q_lower or "busy" in q_lower:
-                return f"Congestion level in {lot_name} is currently: {insights['congestion']}."
-            if any(word in q_lower for word in ["should i", "park here", "recommend", "advice"]):
+
+            # --- Occupancy / fullness ---
+            if any(w in q_lower for w in ["occupied", "full", "taken", "how full"]):
+                return (f"**{insights['occupied']}** slot(s) are currently occupied "
+                        f"in {lot_name} — that's **{insights['occupancy_pct']}%** occupancy.")
+
+            # --- Congestion / busyness ---
+            if any(w in q_lower for w in ["congestion", "busy", "crowded", "traffic"]):
+                level = insights["congestion"]
+                extra = {
+                    "Low": "Plenty of room — a good time to head over.",
+                    "Moderate": "Filling up, but you should still find a spot.",
+                    "High": "Very congested right now — expect a long search for a spot.",
+                }.get(level, "")
+                return f"Congestion in {lot_name} is currently **{level}**. {extra}"
+
+            # --- Recommendation / advice ---
+            if any(w in q_lower for w in ["should i", "park here", "recommend", "advice", "worth it"]):
                 return insights["recommendation"]
+
+            # --- Total capacity ---
             if "how many" in q_lower and "total" in q_lower:
-                return f"{lot_name} has {insights['total']} total slots."
+                return f"{lot_name} has **{insights['total']}** total slots."
+
+            # --- Trend / change over time ---
+            if any(w in q_lower for w in ["trend", "change", "increasing", "decreasing", "over time", "getting worse", "getting better"]):
+                if history_df.empty:
+                    return "I don't have enough logged history yet to describe a trend — run a few more analyses."
+                lot_history = history_df[history_df["lot_name"] == lot_name].sort_values("timestamp")
+                if len(lot_history) < 2:
+                    return (f"I only have one logged reading for {lot_name} so far "
+                            "— analyze it a couple more times to see a trend.")
+                first_pct = lot_history.iloc[0]["occupancy_pct"]
+                last_pct = lot_history.iloc[-1]["occupancy_pct"]
+                diff = last_pct - first_pct
+                if diff > 5:
+                    direction = f"trending **up** (+{diff:.0f} points) — getting busier"
+                elif diff < -5:
+                    direction = f"trending **down** ({diff:.0f} points) — getting freer"
+                else:
+                    direction = "fairly **stable**"
+                return (f"Across {len(lot_history)} logged analyses, occupancy at {lot_name} is "
+                        f"{direction}, from {first_pct}% to {last_pct}%.")
+
+            # --- Compare two lots ---
+            if any(w in q_lower for w in ["compare", "vs", "versus", "better", "which lot"]):
+                if history_df.empty or history_df["lot_name"].nunique() < 2:
+                    return "I need at least two different lots logged in History to compare them."
+                latest_per_lot = (
+                    history_df.sort_values("timestamp")
+                    .groupby("lot_name")
+                    .tail(1)[["lot_name", "occupancy_pct"]]
+                    .sort_values("occupancy_pct")
+                )
+                best = latest_per_lot.iloc[0]
+                lines = [f"{r['lot_name']}: {r['occupancy_pct']}% occupied"
+                         for _, r in latest_per_lot.iterrows()]
+                return ("Here's how your logged lots compare (latest reading):\n\n"
+                        + "\n".join(f"- {line}" for line in lines)
+                        + f"\n\n**{best['lot_name']}** currently has the most space available.")
+
+            # --- Best/worst time-of-day hint (based on history, if enough data) ---
+            if any(w in q_lower for w in ["best time", "when should i", "quietest"]):
+                lot_history = history_df[history_df["lot_name"] == lot_name] if not history_df.empty else history_df
+                if lot_history is None or lot_history.empty or len(lot_history) < 3:
+                    return ("I don't have enough logged readings for this lot yet to spot a "
+                            "best time — keep analyzing it periodically and ask again later.")
+                quietest = lot_history.sort_values("occupancy_pct").iloc[0]
+                return (f"Based on logged history, the quietest recorded reading for {lot_name} "
+                        f"was {quietest['occupancy_pct']}% occupancy at {quietest['timestamp']}.")
+
+            # --- Fallback ---
             return (
-                "I can answer questions about availability, occupancy, congestion, "
-                "or whether you should park here — try asking one of those directly."
+                "I can help with: **availability**, **occupancy**, **congestion**, "
+                "**trends over time**, **comparing lots**, or **whether you should park here**. "
+                "Try asking one of those directly."
             )
 
-        if question:
-            st.markdown(f"**Answer:** {answer_question(question, insights, lot_name_for_qa)}")
+        # --- Chat-style interaction ---
+        question = st.text_input("Ask a question", placeholder="e.g. Is Lot A trending busier today?")
 
+        col_ask, col_clear = st.columns([1, 1])
+        with col_ask:
+            ask_clicked = st.button("Ask", type="primary")
+        with col_clear:
+            clear_clicked = st.button("Clear conversation")
+
+        if clear_clicked:
+            st.session_state["qa_chat"] = []
+
+        if ask_clicked and question:
+            answer = answer_question(question, insights, lot_name_for_qa, history_df_qa)
+            st.session_state["qa_chat"].append(("You", question))
+            st.session_state["qa_chat"].append(("ParkVision", answer))
+
+        for speaker, msg in st.session_state["qa_chat"][-12:]:
+            if speaker == "You":
+                st.markdown(f"🙋 **You:** {msg}")
+            else:
+                st.markdown(f"🅿️ **ParkVision:** {msg}")
+
+        st.divider()
         st.caption(
-            f"Currently answering based on the latest analysis of **{lot_name_for_qa}**: "
+            f"Currently grounded in the latest analysis of **{lot_name_for_qa}**: "
             f"{insights['occupied']}/{insights['total']} occupied "
-            f"({insights['occupancy_pct']}%), congestion: {insights['congestion']}."
+            f"({insights['occupancy_pct']}%), congestion: {insights['congestion']}. "
+            f"Trend and comparison questions also draw on your full logged History."
         )
 
-        
+# ------------------------------------------------------------
+# TAB 8: SETTINGS
+# ------------------------------------------------------------
+with tab_settings:
+    render_header("⚙️ Settings",
+                   "Customize how ParkVision AI looks and behaves.")
+
+    st.subheader("🎨 Appearance")
+    theme_choice = st.radio(
+        "Theme",
+        options=["Dark", "Light (Blue)"],
+        index=0 if st.session_state["theme_mode"] == "Dark" else 1,
+        horizontal=True,
+        help="Light mode uses a soft blue palette instead of plain white.",
+    )
+
+    if theme_choice != st.session_state["theme_mode"]:
+        st.session_state["theme_mode"] = theme_choice
+        st.rerun()
+
+    st.divider()
+
+    st.subheader("🅿️ Default Lot Name")
+    st.text_input(
+        "Pre-fill this name on the Detect tab",
+        value=st.session_state.get("default_lot_name", "Lot A"),
+        key="default_lot_name",
+        help="Handy if you're usually analyzing the same lot repeatedly.",
+    )
+
+    st.divider()
+
+    st.subheader("🗑️ Data Management")
+    st.caption("Clear all logged analysis history (cannot be undone).")
+    if st.button("Clear All History"):
+        if os.path.exists(HISTORY_CSV):
+            os.remove(HISTORY_CSV)
+            st.success("History cleared. Refresh the History or Heatmap tab to see the change.")
+        else:
+            st.info("There's no history to clear yet.")
+
+    st.divider()
+    st.caption("ParkVision AI — Intelligent Urban Parking Analytics & Space Optimisation Platform")
+    
